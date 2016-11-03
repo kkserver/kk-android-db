@@ -1,4 +1,5 @@
 package cn.kkserver.db;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
@@ -19,8 +20,8 @@ public class DBSQLiteContext extends DBAbstractContext implements DBContext {
     private final SQLiteDatabase _db;
     private boolean _inited;
 
-    public DBSQLiteContext(File file) {
-        _db = SQLiteDatabase.openOrCreateDatabase(file,null);
+    public DBSQLiteContext(Context context,String name) {
+        _db = context.openOrCreateDatabase(name,0777,null);
     }
 
     private final static String DBTypeString(DBField fd) {
@@ -101,7 +102,7 @@ public class DBSQLiteContext extends DBAbstractContext implements DBContext {
 
         if(! _inited) {
             _db.execSQL("CREATE TABLE IF NOT EXISTS __scheme (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,name VARCHAR(64) NULL,scheme TEXT NULL)");
-            _db.execSQL("CREATE UNIQUE INDEX __scheme  ON name (name ASC)");
+            _db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS name ON __scheme (name ASC)");
             _inited = true;
         }
 
@@ -128,7 +129,7 @@ public class DBSQLiteContext extends DBAbstractContext implements DBContext {
                         if(v.getInt("length") != fd.dbField.length()
                                 || !v.getString("type").equals(fd.dbField.type().toString())) {
                             try {
-                                _db.execSQL("ALTER TABLE " + table.name + " MODIFY " + fd.name + " " + DBTypeString(fd.dbField));
+                                _db.execSQL("ALTER TABLE [" + table.name + "] MODIFY [" + fd.name + "] " + DBTypeString(fd.dbField));
                             }
                             catch(SQLException ex) {
                                 Log.d(DB.TAG,ex.getMessage(),ex);
@@ -140,7 +141,7 @@ public class DBSQLiteContext extends DBAbstractContext implements DBContext {
                                 && ! fd.dbField.index().toString().equals(v.getString("index"))) {
                             if(fd.dbField.unique()) {
                                 try {
-                                    _db.execSQL("CREATE UNIQUE INDEX " + table.name + " ON " + fd.name + "(" + fd.name + " "+ fd.dbField.index().toString() + ")");
+                                    _db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS [" + fd.name + "] ON [" + table.name + "]([" + fd.name + "] "+ fd.dbField.index().toString() + ")");
                                 }
                                 catch(SQLException ex) {
                                     Log.d(DB.TAG,ex.getMessage(),ex);
@@ -148,7 +149,7 @@ public class DBSQLiteContext extends DBAbstractContext implements DBContext {
                             }
                             else {
                                 try {
-                                    _db.execSQL("CREATE INDEX " + table.name + " ON " + fd.name + "(" + fd.name + " "+ fd.dbField.index().toString() + ")");
+                                    _db.execSQL("CREATE INDEX IF NOT EXISTS [" + fd.name + "] ON [" + table.name + "]([" + fd.name + "] "+ fd.dbField.index().toString() + ")");
                                 }
                                 catch(SQLException ex) {
                                     Log.d(DB.TAG,ex.getMessage(),ex);
@@ -160,7 +161,7 @@ public class DBSQLiteContext extends DBAbstractContext implements DBContext {
                     }
                     else {
                         try {
-                            _db.execSQL("ALTER TABLE " + table.name + " ADD COLUMN " + fd.name + " " + DBTypeString(fd.dbField) + "");
+                            _db.execSQL("ALTER TABLE [" + table.name + "] ADD COLUMN [" + fd.name + "] " + DBTypeString(fd.dbField) + "");
                         }
                         catch(SQLException ex) {
                             Log.d(DB.TAG,ex.getMessage(),ex);
@@ -170,7 +171,7 @@ public class DBSQLiteContext extends DBAbstractContext implements DBContext {
                         if(fd.dbField.index() != DBIndexType.None) {
                             if(fd.dbField.unique()) {
                                 try {
-                                    _db.execSQL("CREATE UNIQUE INDEX " + table.name + " ON " + fd.name + "(" + fd.name + " "+ fd.dbField.index().toString() + ")");
+                                    _db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS [" + fd.name + "] ON [" + table.name + "]([" + fd.name + "] "+ fd.dbField.index().toString() + ")");
                                 }
                                 catch(SQLException ex) {
                                     Log.d(DB.TAG,ex.getMessage(),ex);
@@ -178,7 +179,7 @@ public class DBSQLiteContext extends DBAbstractContext implements DBContext {
                             }
                             else {
                                 try {
-                                    _db.execSQL("CREATE INDEX " + table.name + " ON " + fd.name + "(" + fd.name + " "+ fd.dbField.index().toString() + ")");
+                                    _db.execSQL("CREATE INDEX IF NOT EXISTS [" + fd.name + "] ON [" + table.name + "]([" + fd.name + "] "+ fd.dbField.index().toString() + ")");
                                 }
                                 catch(SQLException ex) {
                                     Log.d(DB.TAG,ex.getMessage(),ex);
@@ -205,7 +206,7 @@ public class DBSQLiteContext extends DBAbstractContext implements DBContext {
                 StringBuilder sql = new StringBuilder();
                 int i = 0;
 
-                sql.append("CREATE TABLE IF NOT EXISTS ").append(table.name).append("(");
+                sql.append("CREATE TABLE IF NOT EXISTS [").append(table.name).append("](");
 
                 if(!"".equals(table.dbTable.key())) {
                     sql.append(table.dbTable.key()).append(" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT");
@@ -218,7 +219,7 @@ public class DBSQLiteContext extends DBAbstractContext implements DBContext {
                         sql.append(",");
                     }
 
-                    sql.append(fd.name).append(" ").append(DBTypeString(fd.dbField));
+                    sql.append("[").append(fd.name).append("] ").append(DBTypeString(fd.dbField));
 
                     i ++;
 
@@ -239,7 +240,7 @@ public class DBSQLiteContext extends DBAbstractContext implements DBContext {
 
                         if(fd.dbField.unique()) {
                             try {
-                                _db.execSQL("CREATE UNIQUE INDEX " + table.name + " ON " + fd.name + "(" + fd.name + " "+ fd.dbField.index().toString() + ")");
+                                _db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS [" + fd.name + "] ON [" + table.name + "]([" + fd.name + "] "+ fd.dbField.index().toString() + ")");
                             }
                             catch(SQLException ex) {
                                 Log.d(DB.TAG,ex.getMessage(),ex);
@@ -247,7 +248,7 @@ public class DBSQLiteContext extends DBAbstractContext implements DBContext {
                         }
                         else {
                             try {
-                                _db.execSQL("CREATE INDEX " + table.name + " ON " + fd.name + "(" + fd.name + " "+ fd.dbField.index().toString() + ")");
+                                _db.execSQL("CREATE INDEX [" + fd.name + "] ON [" + table.name + "]([" + fd.name + "] "+ fd.dbField.index().toString() + ")");
                             }
                             catch(SQLException ex) {
                                 Log.d(DB.TAG,ex.getMessage(),ex);
@@ -278,7 +279,7 @@ public class DBSQLiteContext extends DBAbstractContext implements DBContext {
     }
 
     @Override
-    public void insert(Object object) throws SQLException,DBException {
+    public void insert(DBObject object) throws SQLException,DBException {
 
         DBTableScheme table = getTableScheme(object.getClass());
 
@@ -298,7 +299,7 @@ public class DBSQLiteContext extends DBAbstractContext implements DBContext {
                 values.append(",");
             }
 
-            sql.append(fd.name);
+            sql.append("[").append(fd.name).append("]");
             values.append("?");
 
             i ++ ;
@@ -306,7 +307,7 @@ public class DBSQLiteContext extends DBAbstractContext implements DBContext {
 
         values.append(")");
 
-        sql.append(values.toString()).append("");
+        sql.append(")").append(values.toString()).append("");
 
         SQLiteStatement st = _db.compileStatement(sql.toString());
 
@@ -377,7 +378,7 @@ public class DBSQLiteContext extends DBAbstractContext implements DBContext {
     }
 
     @Override
-    public void update(Object object,Set<String> keys) throws SQLException,DBException {
+    public void update(DBObject object,Set<String> keys) throws SQLException,DBException {
 
         DBTableScheme table = getTableScheme(object.getClass());
 
@@ -387,7 +388,7 @@ public class DBSQLiteContext extends DBAbstractContext implements DBContext {
 
         StringBuilder sql = new StringBuilder();
 
-        sql.append("UPDATE ").append(table.name).append(" SET ");
+        sql.append("UPDATE [").append(table.name).append("] SET ");
 
         int i = 0;
 
@@ -399,7 +400,7 @@ public class DBSQLiteContext extends DBAbstractContext implements DBContext {
                     sql.append(",");
                 }
 
-                sql.append(fd.name).append("=?");
+                sql.append("[").append(fd.name).append("]=?");
 
                 i ++ ;
             }
@@ -410,7 +411,7 @@ public class DBSQLiteContext extends DBAbstractContext implements DBContext {
             throw new DBException("Not Found Update Fields");
         }
 
-        sql.append(" WHERE ").append(table.key.name).append("=?");
+        sql.append(" WHERE [").append(table.key.name).append("]=?");
 
         SQLiteStatement st = _db.compileStatement(sql.toString());
 
@@ -458,12 +459,12 @@ public class DBSQLiteContext extends DBAbstractContext implements DBContext {
     }
 
     @Override
-    public void update(Object object) throws SQLException,DBException  {
-        update(object,null);
+    public void update(DBObject object) throws SQLException,DBException  {
+        update(object,(Set<String>) null);
     }
 
     @Override
-    public void delete(Object object) throws SQLException,DBException {
+    public void delete(DBObject object) throws SQLException,DBException {
 
         DBTableScheme table = getTableScheme(object.getClass());
 
@@ -473,7 +474,7 @@ public class DBSQLiteContext extends DBAbstractContext implements DBContext {
 
         StringBuilder sql = new StringBuilder();
 
-        sql.append("DELETE FROM ").append(table.name).append(" WHERE ").append(table.key.name).append("=?");
+        sql.append("DELETE FROM [").append(table.name).append("] WHERE [").append(table.key.name).append("]=?");
 
         Object id;
 
@@ -498,9 +499,22 @@ public class DBSQLiteContext extends DBAbstractContext implements DBContext {
 
         StringBuilder sql = new StringBuilder();
 
-        sql.append("DELETE FROM ").append(table.name).append(" WHERE ").append(table.key.name).append("=?");
+        sql.append("DELETE FROM [").append(table.name).append("] WHERE [").append(table.key.name).append("]=?");
 
         _db.execSQL(sql.toString(),new Object[]{id});
+
+    }
+
+    @Override
+    public void delete(Class<?> tableClass,String selection,
+                       Object[] selectionArgs) throws SQLException,DBException {
+        DBTableScheme table = getTableScheme(tableClass);
+
+        StringBuilder sql = new StringBuilder();
+
+        sql.append("DELETE FROM [").append(table.name).append("] WHERE ").append(selection);
+
+        _db.execSQL(sql.toString(),selectionArgs);
 
     }
 
@@ -509,13 +523,7 @@ public class DBSQLiteContext extends DBAbstractContext implements DBContext {
 
         DBTableScheme table = getTableScheme(tableClass);
 
-        String[] columns = new String[table.fields.length];
-
-        for(int i=0;i<columns.length;i++) {
-            columns[i] = table.fields[i].name;
-        }
-
-        return query(table.name,columns,selection,selectionArgs,groupBy,having,orderBy,limit);
+        return query(table.name,new String[]{"*"},selection,selectionArgs,groupBy,having,orderBy,limit);
 
     }
 

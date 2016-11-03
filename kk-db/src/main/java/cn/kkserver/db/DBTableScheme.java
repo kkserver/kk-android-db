@@ -22,9 +22,11 @@ public class DBTableScheme extends Object {
     public final DBFieldScheme[] fields;
     public final DBFieldScheme key;
 
+    private final TreeMap<String,DBFieldScheme> _fields = new TreeMap<>();
+
     public DBTableScheme(Class<?> tableClass) throws DBException {
 
-        if(DBObject.class.isAssignableFrom(tableClass)) {
+        if(!DBObject.class.isAssignableFrom(tableClass)) {
             throw new DBException(tableClass.getName() + " Not Implements DBObject");
         }
 
@@ -36,9 +38,7 @@ public class DBTableScheme extends Object {
         this.name = "".equals(dbTable.name()) ? tableClass.getSimpleName().toLowerCase() : dbTable.name();
         this.tableClass = tableClass;
 
-        Set<String> names = new TreeSet<>();
-
-        names.add(dbTable.key());
+        _fields.put(dbTable.key(),null);
 
         List<DBFieldScheme> fds = new ArrayList<>();
 
@@ -56,12 +56,13 @@ public class DBTableScheme extends Object {
 
                     DBFieldScheme v = new DBFieldScheme(fd,dbField);
 
-                    if(! names.contains(v.name)) {
-                        names.add(v.name);
+                    if(! _fields.containsKey(v.name)) {
                         fds.add(v);
+                        _fields.put(v.name,v);
                     }
                     else if(dbTable.key().equals(v.name)) {
                         keyv = v;
+                        _fields.put(v.name,v);
                     }
                 }
 
@@ -72,6 +73,13 @@ public class DBTableScheme extends Object {
 
         this.key = keyv;
         this.fields = fds.toArray(new DBFieldScheme[fds.size()]);
+    }
+
+    public DBFieldScheme field(String name) {
+        if(_fields.containsKey(name)) {
+            return _fields.get(name);
+        }
+        return null;
     }
 
     @Override
