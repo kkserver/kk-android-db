@@ -29,3 +29,20 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.4.0'
     testCompile 'junit:junit:4.12'
 }
+
+
+apply plugin: 'maven'
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            pom.groupId = "kk"
+            pom.artifactId = "db"
+            pom.version = "0.0.1"
+            repository(url: RELEASE_REPOSITORY_URL) {
+
+            }
+        }
+    }
+}
+
