@@ -248,7 +248,7 @@ public class DBSQLiteContext extends DBAbstractContext implements DBContext {
                         }
                         else {
                             try {
-                                _db.execSQL("CREATE INDEX [" + fd.name + "] ON [" + table.name + "]([" + fd.name + "] "+ fd.dbField.index().toString() + ")");
+                                _db.execSQL("CREATE INDEX IF NOT EXISTS [" + fd.name + "] ON [" + table.name + "]([" + fd.name + "] "+ fd.dbField.index().toString() + ")");
                             }
                             catch(SQLException ex) {
                                 Log.d(DB.TAG,ex.getMessage(),ex);
