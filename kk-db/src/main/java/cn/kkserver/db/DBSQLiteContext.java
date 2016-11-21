@@ -194,7 +194,7 @@ public class DBSQLiteContext extends DBAbstractContext implements DBContext {
                 if(hasChanged) {
 
                     try {
-                        _db.execSQL("UPDATE __scheme SET scheme=? WHERE id=?" ,new Object[]{id,table.toString()});
+                        _db.execSQL("UPDATE __scheme SET scheme=? WHERE id=?" ,new Object[]{table.toString(),id});
                     }
                     catch(SQLException ex) {
                         Log.d(DB.TAG,ex.getMessage(),ex);
